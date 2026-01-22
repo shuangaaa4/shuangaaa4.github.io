@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>考研赛博积德站 ⚡️</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=ZCOOL+KuaiLe&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'taro-50': '#F3F0FF',
+                        'taro-100': '#E9D5FF',
+                        'taro-200': '#D8B4FE',
+                        'taro-400': '#C084FC',
+                        'taro-600': '#9333EA',
+                        'taro-800': '#6B21A8',
+                        'cream': '#FFFDF5',
+                        'merit-gold': '#F59E0B', 
+                        'merit-red': '#B91C1C',   
+                        'wood-light': '#D97706',
+                        'wood-dark': '#78350F',
+                        'wood-body': '#92400E',
+                    },
+                    fontFamily: {
+                        'cute': ['"ZCOOL KuaiLe"', 'cursive'],
+                        'brush': ['"Ma Shan Zheng"', 'cursive'],
+                        'sans': ['"Noto Sans SC"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #F3F0FF;
+            background-image: radial-gradient(#E9D5FF 2px, transparent 2px);
+            background-size: 24px 24px;
+            min-height: 100vh;
+            /* 适配刘海屏底部 */
+            padding-bottom: env(safe-area-inset-bottom);
+            display: flex;
+            flex-direction: column;
+            overscroll-behavior: none; 
+            overflow-x: hidden;
+            font-family: "Noto Sans SC", sans-serif;
+            /* 优化移动端点击体验 */
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        .hidden-page { display: none !important; }
+        .fade-enter { animation: fadeInPage 0.5s ease-out forwards; }
+        
+        @keyframes fadeInPage {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- 功德箱 (移动端缩小适配) --- */
+        .merit-box-glass {
+            position: fixed;
+            /* 手机端位置微调 */
+            top: 16px; 
+            right: 16px;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            border-radius: 999px; /* 全圆角在手机更柔和 */
+            box-shadow: 0 4px 20px rgba(147, 51, 234, 0.15);
+            padding: 8px 16px; 
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            cursor: default;
+            transform: translateY(-150%); 
+        }
+        .merit-box-glass.active { transform: translateY(0); }
+        
+        .merit-icon-bg {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #F3E8FF 0%, #E9D5FF 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #9333EA;
+            font-size: 1.2rem;
+        }
+
+        .bump-anim { animation: bump 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes bump {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+
+        /* 飘字动画 */
+        @keyframes meritFloatSlow {
+            0% { opacity: 0; transform: translate(-50%, 0) scale(0.5); }
+            10% { opacity: 1; transform: translate(-50%, -40px) scale(1.1); }
+            80% { opacity: 1; transform: translate(-50%, -100px) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -140px) scale(0.9); }
+        }
+        .merit-bubble {
+            position: absolute;
+            animation: meritFloatSlow 3s ease-out forwards;
+            pointer-events: none;
+            z-index: 9999;
+            font-family: "Ma Shan Zheng", cursive;
+            white-space: nowrap;
+            text-shadow: 2px 2px 0px rgba(255, 255, 255, 0.95);
+        }
+
+        /* --- 求签按钮 --- */
+        .token-btn-light {
+            background: linear-gradient(120deg, #F87171 0%, #EF4444 100%);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+            transition: all 0.2s ease;
+        }
+        .token-btn-light:active { transform: scale(0.96); }
+        
+        .shake-token { animation: shake-light 2.5s ease-in-out infinite; }
+        @keyframes shake-light {
+            0%, 100% { transform: translateY(0) rotate(0); }
+            50% { transform: translateY(-3px); }
+        }
+
+        .border-dashed-custom {
+            background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='10' ry='10' stroke='%23FCD34D' stroke-width='2' stroke-dasharray='12%2c 12' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+            border: none;
+        }
+
+        /* --- 具象木鱼按钮 --- */
+        .muyu-real-btn {
+            width: 90px;
+            height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            background: transparent;
+            -webkit-tap-highlight-color: transparent;
+        }
+        /* 点击时的缩放动画 */
+        .muyu-real-btn:active {
+            transform: scale(0.9) rotate(-2deg);
+        }
+        /* 敲击棒动画 */
+        .muyu-real-btn:active .stick {
+            transform: rotate(-15deg) translate(-5px, 5px);
+        }
+
+        .muyu-container { animation: slideDown 0.4s ease-out forwards; }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 选项卡片 */
+        .option-card {
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+            /* 手机端不需要hover效果，只保留active */
+        }
+        .option-card:active:not(.disabled) { 
+            transform: scale(0.98); 
+            background-color: #F3E8FF;
+            border-color: #D8B4FE;
+        }
+        /* 仅在支持hover的设备(PC)上启用hover */
+        @media (hover: hover) {
+            .option-card:hover:not(.disabled) {
+                background-color: #F3E8FF;
+                border-color: #D8B4FE;
+                transform: scale(1.01);
+            }
+        }
+        .option-card.correct { background-color: #DCFCE7; border-color: #4ADE80; color: #14532D; }
+        .option-card.wrong { background-color: #FEE2E2; border-color: #F87171; color: #7F1D1D; }
+        .disabled { pointer-events: none; }
+
+        .analysis-box {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out, opacity 0.5s ease;
+            opacity: 0;
+        }
+        .analysis-box.show { max-height: 1500px; opacity: 1; }
+
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 背景漂浮物：手机端减淡，防止遮挡文字 */
+        .float-bg { animation: float 6s ease-in-out infinite; opacity: 0.15; }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        .bg-pattern {
+            background-color: #F3F0FF;
+            background-image: radial-gradient(#E9D5FF 2px, transparent 2px);
+            background-size: 24px 24px;
+        }
+    </style>
+</head>
+<body class="text-gray-700 select-none">
+
+    <div class="fixed top-10 left-5 text-4xl opacity-20 pointer-events-none float-bg">☁️</div>
+    <div class="fixed top-32 right-8 text-5xl opacity-20 pointer-events-none float-bg" style="animation-delay: 2s">✨</div>
+    <div class="fixed bottom-20 left-6 text-6xl opacity-10 rotate-12 pointer-events-none">📝</div>
+
+    <div id="merit-box" class="merit-box-glass origin-top-right transform scale-90 md:scale-100">
+        <div class="merit-icon-bg shadow-sm">
+            <i class="fa-solid fa-spa"></i>
+        </div>
+        <div class="flex flex-col">
+            <span class="text-xs text-gray-500 font-bold tracking-widest mb-0.5">赛博功德</span>
+            <span class="text-2xl font-brush text-taro-800 leading-none" id="merit-count">0</span>
+        </div>
+    </div>
+
+    <header id="main-header" class="text-center pt-10 pb-2 px-4 relative z-10 hidden-page">
+        <div class="inline-block bg-white px-5 py-2 rounded-full border-4 border-taro-200 shadow-lg mb-2 transform -rotate-2">
+            <span class="text-taro-600 font-bold tracking-widest font-brush text-2xl md:text-3xl">政治刷题 · 悟道室</span>
+        </div>
+    </header>
+
+    <section id="page-start" class="flex-grow flex flex-col items-center justify-center px-4 relative z-20 min-h-screen">
+        <div class="text-center space-y-6 md:space-y-8 fade-enter w-full max-w-sm">
+            <div class="text-7xl md:text-8xl mb-2 float-bg">🪵</div>
+            
+            <div class="space-y-3">
+                <h1 class="text-4xl md:text-5xl font-brush text-taro-800 drop-shadow-sm tracking-wide">
+                    考研赛博积德站
+                </h1>
+                <p class="text-xl md:text-3xl text-black font-normal font-cute mt-4">
+                    刷题即修行 · 上岸靠心诚
+                </p>
+            </div>
+
+            <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-5 border-2 border-taro-100 w-full shadow-lg text-left space-y-3 text-sm md:text-base">
+                <div class="flex items-center text-gray-600">
+                    <span class="bg-taro-100 p-1 rounded mr-3 text-lg">✅</span>
+                    <span>答对题目：基础功德 +1</span>
+                </div>
+                <div class="flex items-center text-gray-600">
+                    <span class="bg-taro-100 p-1 rounded mr-3 text-lg">🎲</span>
+                    <span>正确求签：随机爆发 +1~10</span>
+                </div>
+                <div class="flex items-center text-gray-600">
+                    <span class="bg-taro-100 p-1 rounded mr-3 text-lg">💔</span>
+                    <span>答错惩罚：强制敲木鱼挽救</span>
+                </div>
+            </div>
+
+            <button onclick="startApp()" class="group relative inline-flex items-center justify-center w-full md:w-auto px-8 py-4 text-xl font-bold text-white transition-all duration-200 bg-taro-600 font-cute rounded-full hover:bg-taro-700 hover:shadow-lg focus:outline-none ring-offset-2 focus:ring-2 ring-taro-400 active:scale-95">
+                开启今日修行
+                <i class="fa-solid fa-arrow-right ml-3 transition-transform group-hover:translate-x-1"></i>
+            </button>
+        </div>
+    </section>
+
+    <section id="page-quiz" class="flex-grow flex-col items-center justify-start px-4 pb-24 relative z-10 w-full max-w-2xl mx-auto hidden-page mt-2">
+        
+        <div class="w-full flex justify-between items-end mb-4 px-2">
+            <h1 class="text-xl md:text-2xl font-cute text-taro-800 drop-shadow-sm">每日一练</h1>
+            <span class="text-taro-600 font-bold bg-white px-3 py-1 rounded-lg shadow-sm border border-taro-100 text-sm">
+                <span id="current-num">1</span> / <span id="total-num">5</span>
+            </span>
+        </div>
+
+        <div id="quiz-card" class="w-full bg-white rounded-3xl p-5 md:p-6 shadow-xl border-4 border-taro-100 relative overflow-hidden min-h-[350px]">
+            </div>
+
+        <div class="w-full flex justify-between mt-6 gap-3">
+            <button id="prev-btn" onclick="changeQuestion(-1)" class="flex-1 bg-white text-taro-600 border-2 border-taro-200 py-3 rounded-xl font-bold active:bg-taro-50 transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm md:text-base">
+                <i class="fa-solid fa-arrow-left mr-2"></i> 上一题
+            </button>
+            <button id="next-btn" onclick="changeQuestion(1)" class="flex-1 bg-taro-600 text-white border-2 border-taro-600 py-3 rounded-xl font-bold active:bg-taro-700 transition shadow-lg shadow-taro-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm md:text-base">
+                下一题 <i class="fa-solid fa-arrow-right ml-2"></i>
+            </button>
+        </div>
+    </section>
+
+    <section id="page-result" class="fixed inset-0 z-50 flex flex-col items-center justify-center px-4 bg-pattern hidden-page overflow-y-auto">
+        <div class="w-full max-w-sm md:max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border-4 border-taro-200 fade-enter relative transform scale-100 my-auto">
+            
+            <div class="bg-taro-600 h-28 md:h-32 flex items-center justify-center relative overflow-hidden">
+                <div class="absolute text-9xl opacity-10 rotate-12 text-white">🈴</div>
+                <div class="text-center relative z-10">
+                    <h2 class="text-3xl md:text-4xl font-brush text-white mb-1">功德圆满</h2>
+                    <p class="text-taro-200 font-cute text-xs md:text-sm">今日修行已完成</p>
+                </div>
+            </div>
+
+            <div class="p-6 md:p-8 text-center">
+                <div class="mb-2 text-gray-500 font-bold tracking-widest text-xs md:text-sm">本次累计功德</div>
+                <div class="text-5xl md:text-6xl font-brush text-merit-red mb-5 drop-shadow-sm">
+                    <span id="final-merit">0</span>
+                </div>
+
+                <div class="bg-cream border-2 border-merit-gold/30 rounded-xl p-4 mb-6">
+                    <p class="text-base md:text-lg font-bold text-gray-700 mb-2">
+                        <i class="fa-solid fa-quote-left text-merit-gold mr-2"></i>
+                        施主印堂发亮
+                    </p>
+                    <p id="final-quote" class="text-lg md:text-xl font-brush text-merit-red leading-relaxed">
+                        今年必成硕果，绝对上岸！
+                    </p>
+                </div>
+
+                <button onclick="location.reload()" class="w-full bg-taro-50 text-taro-600 border-2 border-taro-200 py-3 rounded-xl font-bold active:bg-taro-100 transition shadow-sm text-lg">
+                    <i class="fa-solid fa-rotate-right mr-2"></i> 再修一轮
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <footer class="text-center py-6 text-taro-400 text-xs md:text-sm font-cute relative z-10">
+        Design with 💜 for 考研人
+    </footer>
+
+    <script>
+        const finalQuotes = [
+            "今年必成硕果，绝对上岸！",
+            "乾坤未定，你我皆是黑马！",
+            "星光不问赶路人，时光不负有心人。",
+            "苦心人天不负，三千越甲可吞吴。",
+            "大鹏一日同风起，扶摇直上九万里。",
+            "笔锋所至，心之所向，金榜题名！",
+            "这一战，你必将一鸣惊人！",
+            "所有的运气，都藏在你的努力里。",
+            "关关难过关关过，前路漫漫亦灿灿。",
+            "功德圆满，此战必胜！"
+        ];
+
+        const questions = [
+            {
+                id: 1,
+                type: "单选",
+                content: "“十五五时期”在基本实现社会主义现代化进程中具有承前启后的重要地位。总书记指出：“实现社会主义现代化是一个阶梯式递进、不断发展进步”的历史过程。这个过程是一个：<br>①前进性与曲折性相统一的过程<br>②规律性与能动性相统一的过程<br>③连续性与非连续性相统一的过程<br>④直线性与循环性相统一的过程",
+                options: [
+                    { label: "A", text: "①②③" },
+                    { label: "B", text: "①②④" },
+                    { label: "C", text: "①③④" },
+                    { label: "D", text: "②③④" }
+                ],
+                answer: "A",
+                analysis: "<strong>【解析】</strong><br>本题考查唯物辩证法的发展观。<br>①正确：事物发展是前进性与曲折性的统一（螺旋式上升），符合“阶梯式递进”。<br>②正确：社会发展既遵循客观规律，又需要人的主观能动性（奋斗）。<br>③正确：量变是质变的准备（连续性），质变是量变的必然结果（非连续性/飞跃），阶梯式发展体现了这一点。<br>④错误：唯物辩证法认为发展是波浪式前进或螺旋式上升，反对“直线论”和“循环论”。"
+            },
+            {
+                id: 2,
+                type: "单选",
+                content: "一般认为，在重力作用下，密度大的叶片正面更容易朝下着地。但科学研究表明，因叶片形状、空气阻力、涡流和风等因素影响，叶片以复杂形态下落。内部结构与外在形态、旋转功能和空气阻力共同影响其朝向。这表明，事物运动的规律：",
+                options: [
+                    { label: "A", text: "取决于外在因素作用的大小" },
+                    { label: "B", text: "是纯粹偶然因素作用的结果" },
+                    { label: "C", text: "取决于物质形态变化的规律" },
+                    { label: "D", text: "是各种因素相互作用的结果" }
+                ],
+                answer: "D",
+                analysis: "<strong>【解析】</strong><br>本题考查规律与联系。<br>A错误：内因是根据，外因是条件，规律不能单纯取决于外在因素。<br>B错误：规律是必然的，不是纯粹偶然的。<br>C错误：表述片面。<br>D正确：题干中叶片下落受重力、形状、空气阻力、风等多种因素影响，体现了事物运动规律是内部要素和外部环境多种因素相互作用的结果。"
+            },
+            {
+                id: 3,
+                type: "单选",
+                content: "《孙子兵法》认为“兵无常势，水无常形”，要根据不同情况灵活应对才能掌握主动权。由此可知，“兵无常势，水无常形”契合了：",
+                options: [
+                    { label: "A", text: "“原则是研究的出发点”的观点" },
+                    { label: "B", text: "“理性是衡量一切的唯一尺度”的观点" },
+                    { label: "C", text: "“意志自由只是借助于对事物的认识来作出决定”的观点" },
+                    { label: "D", text: "“思维的本质在于把意识的因素联系合为一个统一体”的观点" }
+                ],
+                answer: "C",
+                analysis: "<strong>【解析】</strong><br>本题考查认识论与自由。<br>A错误：犯了唯心主义先验论错误，实践/客观实际才是出发点。<br>B错误：这是唯心主义观点。<br>C正确：恩格斯指出“自由不在于幻想中摆脱自然规律而独立...而在于认识这些规律，从而能够有计划地使自然规律为一定的目的服务”。“根据不同情况灵活应对”正是基于对战争规律（认识）的掌握而做出的主动决定（意志自由）。<br>D错误：这是黑格尔的唯心主义观点。"
+            },
+            {
+                id: 4,
+                type: "单选",
+                content: "列宁指出，剥夺资本家一定会使生产力蓬勃发展，但生产力将以什么速度发展、何时打破分工、何时把劳动变为“生活的第一需要”，这都是我们不知道的。这段话表明，对未来社会可以预见的是：",
+                options: [
+                    { label: "A", text: "生产力发展的具体方式" },
+                    { label: "B", text: "生产力将有更大的发展" },
+                    { label: "C", text: "劳动成为生活的唯一需要" },
+                    { label: "D", text: "每个人获得无差别的全面发展" }
+                ],
+                answer: "B",
+                analysis: "<strong>【解析】</strong><br>本题考查科学社会主义。<br>马克思主义经典作家对未来社会的预测是依据客观规律做出的**一般性**预测，而非细节预测。<br>B正确：列宁肯定了“剥夺资本家一定会使生产力蓬勃发展”，这是大的趋势。<br>A错误：题干明确说“不知道”发展的速度和具体形式。<br>C错误：劳动是“第一需要”而非“唯一需要”。<br>D错误：全面发展是个性与共性的统一，不是“无差别”。"
+            },
+            {
+                id: 5,
+                type: "单选",
+                content: "毛泽东指出：“党的领导机关...也要亲自调查一两个农村，解剖一两个‘麻雀’。这就叫作解剖学”。毛泽东在此强调“解剖麻雀”的实际意义在于：",
+                options: [
+                    { label: "A", text: "理论只有彻底，才能说服人" },
+                    { label: "B", text: "反对经验主义、尾巴主义和机会主义" },
+                    { label: "C", text: "没有革命的理论就不会有革命的实践" },
+                    { label: "D", text: "全面深入了解本国实际，发现本国革命的规律" }
+                ],
+                answer: "D",
+                analysis: "<strong>【解析】</strong><br>本题考查毛泽东思想（实事求是）。<br>“解剖麻雀”是典型的调查研究方法，即通过分析典型个案来认识普遍规律。<br>D正确：毛泽东强调调查研究的目的是为了把马克思主义基本原理同中国具体实际相结合，了解本国国情，从而发现中国革命的特殊规律。<br>A、B、C虽是正确理论，但不是“解剖麻雀”这一具体方法的直接目的。"
+            }
+        ];
+
+        let currentIdx = 0;
+        let meritCount = 0;
+        
+        const pageStart = document.getElementById('page-start');
+        const pageQuiz = document.getElementById('page-quiz');
+        const pageResult = document.getElementById('page-result');
+        const mainHeader = document.getElementById('main-header');
+        const meritBox = document.getElementById('merit-box');
+        
+        const cardContainer = document.getElementById('quiz-card');
+        const numCurrent = document.getElementById('current-num');
+        const numTotal = document.getElementById('total-num');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const meritDisplay = document.getElementById('merit-count');
+        const finalMeritDisplay = document.getElementById('final-merit');
+        const finalQuoteDisplay = document.getElementById('final-quote');
+
+        questions.forEach(q => {
+            q.userSelected = null; 
+            q.lotteryDone = false; 
+            q.lotteryResult = 0;   
+            q.muyuCount = 0; 
+            q.isSalvaged = false; 
+        });
+        numTotal.innerText = questions.length;
+        renderQuestion(currentIdx);
+
+        function startApp() {
+            pageStart.classList.add('hidden-page');
+            mainHeader.classList.remove('hidden-page');
+            mainHeader.classList.add('fade-enter');
+            pageQuiz.classList.remove('hidden-page');
+            pageQuiz.classList.add('fade-enter');
+            setTimeout(() => {
+                meritBox.classList.add('active');
+            }, 300);
+        }
+
+        function showResultPage() {
+            pageQuiz.classList.add('hidden-page');
+            mainHeader.classList.add('hidden-page');
+            meritBox.classList.remove('active'); 
+            
+            const randomQuote = finalQuotes[Math.floor(Math.random() * finalQuotes.length)];
+            finalQuoteDisplay.innerText = randomQuote;
+
+            finalMeritDisplay.innerText = meritCount;
+            pageResult.classList.remove('hidden-page');
+        }
+
+        function renderQuestion(index) {
+            const q = questions[index];
+            numCurrent.innerText = index + 1;
+            cardContainer.innerHTML = '';
+            
+            const contentWrapper = document.createElement('div');
+            contentWrapper.className = 'fade-in';
+
+            const badge = document.createElement('div');
+            badge.className = 'absolute top-0 left-0 bg-taro-400 text-white px-4 py-2 rounded-br-2xl font-bold font-cute text-xl z-20 shadow-md';
+            badge.innerText = `Q${q.id}`;
+            cardContainer.appendChild(badge);
+
+            const content = document.createElement('div');
+            content.className = 'mt-10 mb-6 text-lg font-medium text-gray-800 leading-relaxed md:text-xl';
+            content.innerHTML = q.content;
+            contentWrapper.appendChild(content);
+
+            const optionsDiv = document.createElement('div');
+            optionsDiv.className = 'grid gap-3';
+
+            q.options.forEach(opt => {
+                const btn = document.createElement('div');
+                let btnClass = 'option-card bg-taro-50 rounded-xl p-4 flex items-center group relative border-2 border-transparent';
+                let iconContent = opt.label;
+                let iconClass = 'w-8 h-8 rounded-full bg-white text-taro-600 font-bold flex items-center justify-center mr-4 border-2 border-taro-200 transition-colors shrink-0';
+
+                if (q.userSelected) {
+                    btnClass += ' disabled';
+                    if (opt.label === q.answer) {
+                        btnClass += ' correct';
+                        iconContent = '<i class="fa-solid fa-check"></i>';
+                        iconClass = iconClass.replace('bg-white', 'bg-green-200 border-green-400 text-green-700');
+                    } else if (opt.label === q.userSelected && q.userSelected !== q.answer) {
+                        btnClass += ' wrong';
+                        iconContent = '<i class="fa-solid fa-xmark"></i>';
+                        iconClass = iconClass.replace('bg-white', 'bg-red-200 border-red-400 text-red-700');
+                    }
+                }
+
+                btn.className = btnClass;
+                btn.innerHTML = `
+                    <span class="${iconClass}">${iconContent}</span>
+                    <span class="text-gray-700 font-medium">${opt.text}</span>
+                `;
+                
+                if (!q.userSelected) {
+                    btn.addEventListener('click', (e) => handleAnswer(index, opt.label, e));
+                }
+                
+                optionsDiv.appendChild(btn);
+            });
+            contentWrapper.appendChild(optionsDiv);
+
+            if (q.userSelected) {
+                const isCorrect = (q.userSelected === q.answer);
+                
+                if (!isCorrect && !q.isSalvaged) {
+                    const crisisDiv = document.createElement('div');
+                    crisisDiv.className = 'mt-6 p-5 bg-red-50/90 border-2 border-red-200 rounded-2xl text-center muyu-container shadow-sm';
+                    crisisDiv.innerHTML = `
+                        <div class="text-2xl mb-2 font-brush text-merit-red">⚡️ 功德告急 ⚡️</div>
+                        <p class="text-red-800 text-lg mb-4 font-brush leading-relaxed tracking-wide">
+                            罪过罪过，答案选错！<br>快敲5下木鱼挽回功德，方可继续修行。
+                        </p>
+                        
+                        <div class="flex flex-col items-center justify-center gap-2">
+                            <button onclick="hitMuyu(${index}, event)" class="muyu-real-btn active:scale-95">
+                                <svg width="80" height="80" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                                    <defs>
+                                        <linearGradient id="woodGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <stop offset="0%" style="stop-color:#92400E;stop-opacity:1" />
+                                            <stop offset="100%" style="stop-color:#78350F;stop-opacity:1" />
+                                        </linearGradient>
+                                    </defs>
+                                    <path d="M50 15 C30 15 10 30 10 55 C10 80 35 90 50 90 C65 90 90 80 90 55 C90 30 70 15 50 15 Z" fill="url(#woodGrad)" stroke="#F59E0B" stroke-width="2"/>
+                                    <path d="M20 55 Q50 65 80 55" fill="none" stroke="#451a03" stroke-width="3" stroke-linecap="round"/>
+                                    <circle cx="30" cy="45" r="3" fill="#F59E0B" opacity="0.6"/>
+                                    <circle cx="70" cy="45" r="3" fill="#F59E0B" opacity="0.6"/>
+                                    <path d="M40 30 Q50 35 60 30" fill="none" stroke="#F59E0B" stroke-width="1" opacity="0.4"/>
+                                    <path d="M35 70 Q50 75 65 70" fill="none" stroke="#F59E0B" stroke-width="1" opacity="0.4"/>
+                                </svg>
+                                <div class="stick absolute -right-2 -top-2 transform rotate-12 transition-transform">
+                                    <svg width="40" height="40" viewBox="0 0 40 40">
+                                        <rect x="15" y="0" width="6" height="30" rx="3" fill="#451a03"/>
+                                        <circle cx="18" cy="8" r="6" fill="#B91C1C"/>
+                                    </svg>
+                                </div>
+                            </button>
+                            <div class="text-lg text-wood-light font-brush tracking-widest mt-1">
+                                已敲 <span id="muyu-count-display">${q.muyuCount}</span> / 5
+                            </div>
+                        </div>
+                    `;
+                    contentWrapper.appendChild(crisisDiv);
+                } 
+                else {
+                    const analysisDiv = document.createElement('div');
+                    analysisDiv.className = 'analysis-box show mt-6 bg-cream rounded-xl border-2 border-yellow-200';
+                    
+                    let lotteryHtml = '';
+                    if (isCorrect) {
+                        if (!q.lotteryDone) {
+                            lotteryHtml = `
+                                <div class="mt-8 pt-8 border-dashed-custom rounded-2xl p-6 text-center relative bg-white/50">
+                                    <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-cream border border-merit-gold px-3 py-1 rounded-full text-merit-red font-brush text-lg shadow-sm whitespace-nowrap">
+                                        ✨ 诚心以此 · 叩问前程 ✨
+                                    </div>
+                                    <button onclick="drawLottery(${index})" class="token-btn-light shake-token relative inline-flex items-center justify-center px-6 py-3 rounded-full text-lg md:text-xl font-normal font-brush tracking-widest mt-4 w-full md:w-auto">
+                                        <i class="fa-solid fa-scroll mr-2"></i> 摇动签筒 · 测吉凶
+                                    </button>
+                                </div>
+                            `;
+                        } else {
+                            const points = q.lotteryResult;
+                            let luckText = "小吉";
+                            let colorClass = "text-yellow-600";
+                            if(points >= 8) { luckText = "大吉"; colorClass = "text-merit-red"; }
+                            else if(points >= 4) { luckText = "中吉"; colorClass = "text-merit-gold"; }
+                            
+                            lotteryHtml = `
+                                <div class="mt-8 pt-6 border-t-2 border-dashed border-taro-200 text-center">
+                                    <div class="font-brush text-3xl ${colorClass} animate-bounce">
+                                        <span class="mr-2">🥠</span> 
+                                        <span>${luckText} · 功德 +${points}</span>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    } else {
+                        lotteryHtml = `
+                            <div class="mt-4 pt-4 border-t border-dashed border-gray-300 text-center text-gray-400 font-cute">
+                                功德已挽回，下题继续努力！(本次无法求签)
+                            </div>
+                        `;
+                    }
+
+                    analysisDiv.innerHTML = `
+                        <div class="p-5">
+                            <div class="flex items-center mb-2">
+                                <span class="text-2xl mr-2">💡</span>
+                                <h4 class="font-bold text-taro-800 text-lg">答案解析</h4>
+                            </div>
+                            <div class="text-gray-600 text-base leading-7 space-y-2">
+                                <p class="font-bold text-green-600">正确答案：${q.answer}</p>
+                                ${q.analysis}
+                            </div>
+                            ${lotteryHtml}
+                        </div>
+                    `;
+                    contentWrapper.appendChild(analysisDiv);
+                }
+            }
+
+            cardContainer.appendChild(contentWrapper);
+            updateButtons();
+        }
+
+        function handleAnswer(qIndex, selectedLabel, event) {
+            const q = questions[qIndex];
+            q.userSelected = selectedLabel;
+
+            if (selectedLabel === q.answer) {
+                triggerFloatText(event.clientX, event.clientY, "基础功德 +1", "#9333EA");
+                addMerit(1);
+            }
+
+            renderQuestion(qIndex);
+        }
+
+        function hitMuyu(qIndex, event) {
+            const q = questions[qIndex];
+            q.muyuCount++;
+            
+            triggerFloatText(event.clientX, event.clientY, "功德 +1", "#D97706");
+            
+            const display = document.getElementById('muyu-count-display');
+            if(display) display.innerText = q.muyuCount;
+
+            if (q.muyuCount >= 5) {
+                q.isSalvaged = true;
+                // 挽回成功超大提示
+                triggerFloatText(window.innerWidth/2, window.innerHeight/2, "✨ 功德挽回成功！✨", "#F59E0B", "text-3xl md:text-4xl");
+                setTimeout(() => {
+                    renderQuestion(qIndex); 
+                }, 1000);
+            }
+        }
+
+        function drawLottery(qIndex) {
+            const q = questions[qIndex];
+            if (q.lotteryDone) return;
+            
+            const pool = [1,2,3,4, 5,5,5, 6,6,6, 7,7,7, 8,8,8, 9,10];
+            const points = pool[Math.floor(Math.random() * pool.length)];
+            q.lotteryResult = points;
+            q.lotteryDone = true;
+
+            const btn = document.querySelector('.shake-token');
+            if(btn) {
+                const rect = btn.getBoundingClientRect();
+                triggerLotteryEffect(rect.left + rect.width/2, rect.top, points);
+            }
+            
+            addMerit(points);
+            renderQuestion(qIndex); 
+        }
+
+        function addMerit(points) {
+            meritCount += points;
+            meritDisplay.innerText = meritCount;
+            meritBox.classList.remove('bump-anim');
+            void meritBox.offsetWidth;
+            meritBox.classList.add('bump-anim');
+        }
+
+        function triggerFloatText(x, y, text, color, sizeClass = "text-xl") {
+            const bubble = document.createElement('div');
+            bubble.innerText = text;
+            bubble.className = `merit-bubble ${sizeClass} font-bold`;
+            bubble.style.left = `${x}px`;
+            bubble.style.top = `${y - 20}px`;
+            bubble.style.color = color;
+            document.body.appendChild(bubble);
+            setTimeout(() => bubble.remove(), 3000);
+        }
+
+        function triggerLotteryEffect(x, y, points) {
+            let text = "";
+            let color = "#D97706";
+            let isCrit = false;
+
+            if (points === 10) {
+                text = "⚡️上上签！功德 +10";
+                color = "#BE123C";
+                isCrit = true;
+            } else if (points >= 8) {
+                text = "大吉！功德 +" + points;
+                color = "#BE123C";
+            } else if (points >= 4) {
+                text = "中吉 功德 +" + points;
+                color = "#D97706";
+            } else {
+                text = "小吉 功德 +" + points;
+                color = "#8B5A2B";
+            }
+
+            const bubble = document.createElement('div');
+            bubble.innerText = text;
+            bubble.className = 'merit-bubble text-2xl font-bold';
+            if(isCrit) bubble.className += ' crit-hit';
+            
+            bubble.style.left = `${x}px`;
+            bubble.style.top = `${y - 40}px`;
+            bubble.style.color = color;
+            
+            document.body.appendChild(bubble);
+            setTimeout(() => bubble.remove(), 3000);
+        }
+
+        function changeQuestion(direction) {
+            const newIdx = currentIdx + direction;
+            if (newIdx >= 0 && newIdx < questions.length) {
+                currentIdx = newIdx;
+                renderQuestion(currentIdx);
+            }
+        }
+
+        function updateButtons() {
+            const q = questions[currentIdx];
+            
+            prevBtn.disabled = currentIdx === 0;
+
+            const isWrongAndNotSalvaged = q.userSelected && (q.userSelected !== q.answer) && !q.isSalvaged;
+            nextBtn.disabled = isWrongAndNotSalvaged;
+            
+            if (isWrongAndNotSalvaged) {
+                nextBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                nextBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+
+            if (currentIdx === questions.length - 1) {
+                nextBtn.innerHTML = '查看修行成果 <i class="fa-solid fa-flag-checkered ml-2"></i>';
+                nextBtn.onclick = () => {
+                    if (!isWrongAndNotSalvaged) showResultPage();
+                };
+            } else {
+                nextBtn.innerHTML = '下一题 <i class="fa-solid fa-arrow-right ml-2"></i>';
+                nextBtn.onclick = () => {
+                     if (!isWrongAndNotSalvaged) changeQuestion(1);
+                };
+            }
+        }
+    </script>
+</body>
+</html>
